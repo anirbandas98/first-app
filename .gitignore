@@ -27,3 +27,5 @@ target/
 bin/
 
 *.class
+
+*/db.properties
