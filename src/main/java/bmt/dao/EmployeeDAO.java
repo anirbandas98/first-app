@@ -1,5 +1,8 @@
 package bmt.dao;
 
+import bmt.model.Employee;
+import bmt.util.DBUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
@@ -7,46 +10,53 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import bmt.model.Employee;
-
 public class EmployeeDAO {
-    private Connection connection;
-    private final Properties sqlQueries;
+    private Properties queries;
 
     public EmployeeDAO() {
-        Properties dbProps = new Properties();
-        sqlQueries = new Properties();
+        this.queries = loadQueries();
+    }
 
-        try {
-            // Load database properties
-            InputStream dbPropsStream = getClass().getClassLoader().getResourceAsStream("db.properties");
-            if (dbPropsStream != null) {
-                dbProps.load(dbPropsStream);
-                dbPropsStream.close();
-            }
-
-            // Load SQL queries
-            InputStream sqlQueriesStream = getClass().getClassLoader().getResourceAsStream("sql-queries.properties");
-            if (sqlQueriesStream != null) {
-                sqlQueries.load(sqlQueriesStream);
-                sqlQueriesStream.close();
-            }
-
-            // Establish the connection
-            String url = dbProps.getProperty("db.url");
-            String user = dbProps.getProperty("db.user");
-            String password = dbProps.getProperty("db.password");
-            connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Database connected successfully!");
-
-        } catch (SQLException | IOException e) {
+    private Properties loadQueries() {
+        Properties properties = new Properties();
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("queries.properties")) {
+            properties.load(inputStream);
+        } catch (IOException e) {
             e.printStackTrace();
+            // Handle the exception as per your application's error handling strategy
+        }
+        return properties;
+    }
+
+    public void insertEmployee(Employee employee) {
+        String sql = queries.getProperty("sql.insertEmployee");
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, employee.getName());
+            stmt.setString(2, employee.getPosition());
+
+            int rowsInserted = stmt.executeUpdate();
+
+            if (rowsInserted > 0) {
+                System.out.println("Employee inserted successfully.");
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int generatedId = generatedKeys.getInt(1);
+                        employee.setId(generatedId);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as per your application's error handling strategy
         }
     }
 
     public List<Employee> fetchAllEmployees() {
         List<Employee> employees = new ArrayList<>();
-        String query = sqlQueries.getProperty("fetchAllEmployees");
+        String sql = queries.getProperty("sql.selectAllEmployees");
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -69,41 +79,8 @@ public class EmployeeDAO {
         return employees;
     }
 
-    public void insertEmployee(Employee employee) {
-        String query = sqlQueries.getProperty("insertEmployee");
-
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            stmt.setString(1, employee.getName());
-            stmt.setString(2, employee.getPosition());
-
-            int rowsInserted = stmt.executeUpdate();
-
-            if (rowsInserted > 0) {
-                System.out.println("Employee inserted successfully.");
-
-                // Retrieve the auto-generated id if needed
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        int generatedId = generatedKeys.getInt(1);
-                        employee.setId(generatedId);
-                    } else {
-                        throw new SQLException("Failed to retrieve auto-generated ID.");
-                    }
-                }
-            } else {
-                throw new SQLException("Failed to insert employee, no rows affected.");
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            // Handle the exception as per your application's error handling strategy
-        }
-    }
-
     public void updateEmployee(Employee employee) {
-        String query = sqlQueries.getProperty("updateEmployee");
+        String sql = queries.getProperty("sql.updateEmployee");
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -116,8 +93,6 @@ public class EmployeeDAO {
 
             if (rowsUpdated > 0) {
                 System.out.println("Employee updated successfully.");
-            } else {
-                throw new SQLException("Failed to update employee, no rows affected.");
             }
 
         } catch (SQLException ex) {
@@ -126,8 +101,8 @@ public class EmployeeDAO {
         }
     }
 
-    public void deleteEmployee(int id) {
-        String query = sqlQueries.getProperty("deleteEmployee");
+    public void deleteEmployee(int employeeId) {
+        String sql = queries.getProperty("sql.deleteEmployee");
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -138,8 +113,6 @@ public class EmployeeDAO {
 
             if (rowsDeleted > 0) {
                 System.out.println("Employee deleted successfully.");
-            } else {
-                throw new SQLException("Failed to delete employee, no rows affected.");
             }
 
         } catch (SQLException ex) {
@@ -148,14 +121,10 @@ public class EmployeeDAO {
         }
     }
 
+    // Other methods as needed
+
     public void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                System.out.println("Database connection closed.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // Implement if needed to close database connection
+        DBUtil.closeConnection();
     }
 }
