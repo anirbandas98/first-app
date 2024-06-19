@@ -5,7 +5,15 @@ public class Employee {
     private String name;
     private String position;
 
-    // Constructor
+    // Constructors
+    public Employee() {
+    }
+
+    public Employee(String name, String position) {
+        this.name = name;
+        this.position = position;
+    }
+
     public Employee(int id, String name, String position) {
         this.id = id;
         this.name = name;
@@ -37,6 +45,7 @@ public class Employee {
         this.position = position;
     }
 
+    // toString method for printing employee details
     @Override
     public String toString() {
         return "Employee{" +

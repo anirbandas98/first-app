@@ -48,17 +48,22 @@ public class EmployeeDAO {
         List<Employee> employees = new ArrayList<>();
         String query = sqlQueries.getProperty("fetchAllEmployees");
 
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
 
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String name = resultSet.getString("name");
-                String position = resultSet.getString("position");
-                employees.add(new Employee(id, name, position));
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                String position = rs.getString("position");
+
+                Employee employee = new Employee(id, name, position);
+                employees.add(employee);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as per your application's error handling strategy
         }
 
         return employees;
@@ -67,36 +72,79 @@ public class EmployeeDAO {
     public void insertEmployee(Employee employee) {
         String query = sqlQueries.getProperty("insertEmployee");
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setString(1, employee.getName());
-            preparedStatement.setString(2, employee.getPosition());
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, employee.getName());
+            stmt.setString(2, employee.getPosition());
+
+            int rowsInserted = stmt.executeUpdate();
+
+            if (rowsInserted > 0) {
+                System.out.println("Employee inserted successfully.");
+
+                // Retrieve the auto-generated id if needed
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int generatedId = generatedKeys.getInt(1);
+                        employee.setId(generatedId);
+                    } else {
+                        throw new SQLException("Failed to retrieve auto-generated ID.");
+                    }
+                }
+            } else {
+                throw new SQLException("Failed to insert employee, no rows affected.");
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as per your application's error handling strategy
         }
     }
 
     public void updateEmployee(Employee employee) {
         String query = sqlQueries.getProperty("updateEmployee");
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setString(1, employee.getName());
-            preparedStatement.setString(2, employee.getPosition());
-            preparedStatement.setInt(3, employee.getId());
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, employee.getName());
+            stmt.setString(2, employee.getPosition());
+            stmt.setInt(3, employee.getId());
+
+            int rowsUpdated = stmt.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("Employee updated successfully.");
+            } else {
+                throw new SQLException("Failed to update employee, no rows affected.");
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as per your application's error handling strategy
         }
     }
 
     public void deleteEmployee(int id) {
         String query = sqlQueries.getProperty("deleteEmployee");
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.setInt(1, id);
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, employeeId);
+
+            int rowsDeleted = stmt.executeUpdate();
+
+            if (rowsDeleted > 0) {
+                System.out.println("Employee deleted successfully.");
+            } else {
+                throw new SQLException("Failed to delete employee, no rows affected.");
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            // Handle the exception as per your application's error handling strategy
         }
     }
 
