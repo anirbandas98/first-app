@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class EmployeeDAO {
-    private Properties queries;
+    private final Properties queries;
 
     public EmployeeDAO() {
         this.queries = loadQueries();
