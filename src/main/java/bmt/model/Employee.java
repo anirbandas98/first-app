@@ -6,8 +6,6 @@ public class Employee {
     private String position;
 
     // Constructors
-    public Employee() {
-    }
 
     public Employee(String name, String position) {
         this.name = name;
