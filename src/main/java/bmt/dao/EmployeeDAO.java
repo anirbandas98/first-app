@@ -72,7 +72,10 @@ public class EmployeeDAO {
                 String name = rs.getString("name");
                 String position = rs.getString("position");
 
-                Employee employee = new Employee(id, name, position);
+                Employee employee = new Employee();
+                employee.setId(id);
+                employee.setName(name);
+                employee.setPosition(position);
                 employees.add(employee);
             }
 

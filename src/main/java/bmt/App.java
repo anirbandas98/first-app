@@ -10,9 +10,7 @@ public class App {
         EmployeeDAO employeeDAO = new EmployeeDAO();
 
         // Insert a new employee
-        Employee newEmployee = new Employee();
-        newEmployee.setName("Alice Johnson");
-        newEmployee.setPosition("Engineer");
+        Employee newEmployee = new Employee("Alice Johnson", "Engineer");
         employeeDAO.insertEmployee(newEmployee);
 
         // Fetch all employees
