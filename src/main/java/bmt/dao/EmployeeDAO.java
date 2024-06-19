@@ -3,6 +3,7 @@ package bmt.dao;
 import bmt.model.Employee;
 import bmt.util.DBUtil;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
@@ -20,7 +21,11 @@ public class EmployeeDAO {
     private Properties loadQueries() {
         Properties properties = new Properties();
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("queries.properties")) {
-            properties.load(inputStream);
+            if (inputStream != null) {
+                properties.load(inputStream);
+            } else {
+                throw new FileNotFoundException("queries.properties file not found in classpath");
+            }
         } catch (IOException e) {
             e.printStackTrace();
             // Handle the exception as per your application's error handling strategy
@@ -120,8 +125,6 @@ public class EmployeeDAO {
             // Handle the exception as per your application's error handling strategy
         }
     }
-
-    // Other methods as needed
 
     public void closeConnection() {
         // Implement if needed to close database connection

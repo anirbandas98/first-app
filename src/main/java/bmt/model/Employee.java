@@ -5,12 +5,7 @@ public class Employee {
     private String name;
     private String position;
 
-    // Constructors
-
-    public Employee(String name, String position) {
-        this.name = name;
-        this.position = position;
-    }
+    public Employee() {}
 
     public Employee(int id, String name, String position) {
         this.id = id;
@@ -18,7 +13,7 @@ public class Employee {
         this.position = position;
     }
 
-    // Getters and Setters
+    // Getters and setters
     public int getId() {
         return id;
     }
@@ -43,7 +38,6 @@ public class Employee {
         this.position = position;
     }
 
-    // toString method for printing employee details
     @Override
     public String toString() {
         return "Employee{" +
